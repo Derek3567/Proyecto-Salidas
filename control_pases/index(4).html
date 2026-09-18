@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Control de Pases de Salida</title>
+  <meta name="description" content="Sistema local para verificar tutores y generar pases de salida.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <video autoplay muted loop playsinline id="si" aria-hidden="true"><source src="assets/fondo.mp4" type="video/mp4"></video>
+  <div class="video-overlay" aria-hidden="true"></div>
+  <div id="floatingDecor" class="floating-decor-layer" aria-hidden="true">
+    <div class="floating-decor decor-dgeti" data-size="large">
+      <img src="assets/decor-dgeti.png" alt="">
+    </div>
+    <div class="floating-decor decor-cbtis" data-size="medium">
+      <img src="assets/decor-cbtis.png" alt="">
+    </div>
+    <div class="floating-decor decor-snake" data-size="small">
+      <img src="assets/decor-serpiente.png" alt="">
+    </div>
+  </div>
+  <div id="pageTransition" class="page-transition" aria-hidden="true"><span class="transition-ring"></span><span class="transition-ring ring-2"></span><span class="transition-core"></span></div>
+  <div id="themePaint" class="theme-paint" aria-hidden="true"></div>
+  <div id="toast" class="toast"></div>
+
+  <div id="resetModal" class="reset-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle">
+    <div class="reset-modal-card" role="document">
+      <div class="reset-modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M7 7l.7 12.1a1.5 1.5 0 0 0 1.5 1.4h5.6a1.5 1.5 0 0 0 1.5-1.4L17 7M10 11v6M14 11v6"/></svg>
+      </div>
+      <div class="reset-modal-content">
+        <p class="eyebrow">REINICIAR REGISTRO</p>
+        <h3 id="resetModalTitle">¿Estás seguro?</h3>
+        <p>Se borrarán los datos capturados del pase actual. Los registros autorizados y los folios recientes permanecerán guardados.</p>
+      </div>
+      <div class="reset-modal-actions">
+        <button id="cancelResetBtn" class="secondary-btn" type="button">Cancelar</button>
+        <button id="confirmResetBtn" class="modal-danger-btn" type="button">Sí, reiniciar</button>
+      </div>
+    </div>
+  </div>
+
+  <main id="home" class="screen home-screen">
+    <div class="home-glow"></div>
+    <div class="home-card">
+      <div class="brand-mark cbtis-brand"><img src="assets/decor-cbtis.png" alt="Logo CBTIS"></div>
+      <p class="eyebrow">CONTROL ESCOLAR</p>
+      <h1>Pases de salida</h1>
+      <div class="home-copy home-descriptions"><p><strong>Ir a Registros:</strong> administra alumnos y tutores.</p><p><strong>Iniciar sistema:</strong> verifica tutores y genera pases de salida.</p></div>
+      <div class="home-actions">
+        <button id="recordsHomeBtn" class="secondary-btn home-records-btn" type="button"><span>▣</span><span>Ir a Registros</span><span class="arrow">→</span></button>
+      <button id="startBtn" class="primary-btn start-btn" type="button"><span class="start-icon"><i></i></span><span>Iniciar sistema</span><span class="arrow">→</span></button>
+      </div>
+    </div>
+  </main>
+
+  <main id="records" class="screen records-screen hidden">
+    <section class="records-shell">
+      <header class="records-topbar">
+        <div><p class="eyebrow">CONTROL ESCOLAR</p><h2>Registros de alumnos</h2><p class="records-subtitle">Administra altas, bajas, consultas y modificaciones sin mezclar esta zona con el Sistema de Salida.</p></div>
+        <div class="records-nav-actions"><button id="backFromRecordsBtn" class="ghost-btn" type="button">← Inicio</button><button id="recordsSystemBtn" class="ghost-btn" type="button">Ir al Sistema →</button></div>
+      </header>
+
+      <div class="records-tabs" role="tablist" aria-label="Administración de alumnos y tutores">
+        <button class="records-tab active" data-records-view="users" type="button">Alumnos</button>
+        <button class="records-tab" data-records-view="authorized" type="button">Tutores autorizados</button>
+      </div>
+
+      <section id="usersRecordsView" class="records-view active-records-view">
+        <div class="records-heading"><div><p class="eyebrow">ADMINISTRACIÓN</p><h3>Alumnos registrados</h3></div><span class="badge neutral" id="userCountBadge">0 alumnos</span></div>
+        <div class="records-layout">
+          <form id="userForm" class="user-form">
+            <input id="editingUserIndex" type="hidden" value="-1">
+            <div class="records-form-title"><strong id="userFormTitle">Registrar alumno</strong><span>Demo local</span></div>
+            <div class="form-grid">
+              <label>Nombres<input id="uNombres" type="text" required autocomplete="off"></label>
+              <label>Apellidos<input id="uApellidos" type="text" required autocomplete="off"></label>
+              <label>Matrícula<input id="uMatricula" type="text" required autocomplete="off" autocomplete="off"></label>
+              <label>Semestre<select id="uSemestre" required><option value="">Seleccionar...</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+              <label>Grupo<input id="uGrupo" type="text" required autocomplete="off"></label>
+              <label class="wide">Especialidad<select id="uEspecialidad" required><option value="">Seleccionar...</option><option>Programacion</option><option>Inteligencia Artificial</option><option>Contabilidad</option><option>Servicios de Hospedaje</option><option>Alimentos y Bebidas</option><option>Mecanica Industrial</option><option>Logistica</option></select></label>
+              <label class="wide">Nombre completo del tutor<input id="uTutor" type="text" required autocomplete="off"></label>
+              <label class="wide">Imagen del INE del tutor autorizado<input id="uIne" type="file" accept="image/*"><small class="field-help">Solo demostración local. Máximo 3 MB.</small></label>
+            </div>
+            <div id="inePreview" class="ine-preview hidden"><img id="inePreviewImg" alt="Vista previa del INE"><button id="removeIneBtn" class="delete-record" type="button">Quitar imagen</button></div>
+            <div class="record-form-actions"><button id="cancelEditBtn" class="secondary-btn hidden" type="button">Cancelar edición</button><button class="primary-btn" type="submit" id="saveUserBtn">Registrar alumno</button></div>
+          </form>
+
+          <div class="user-list-card">
+            <div class="list-toolbar"><div><strong>Consulta rápida</strong><p class="muted">Busca por nombre, matrícula, grupo o tutor.</p></div><input id="userSearch" type="search" placeholder="Buscar alumno..." autocomplete="off"></div>
+            <div id="usersList" class="users-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="authorizedRecordsView" class="records-view">
+        <div class="records-heading"><div><p class="eyebrow">VERIFICACIÓN</p><h3>Registros de tutores autorizados</h3><p class="muted">Estos registros alimentan la comprobación del Sistema de Salida. Permanecen fuera de su interfaz principal.</p></div><input id="registrySearch" type="search" placeholder="Buscar tutor, alumno o código..." autocomplete="off"></div>
+        <div id="registryList" class="registry-list"></div>
+        <div class="registry-add records-registry-add">
+          <input id="newTutor" placeholder="Tutor autorizado" autocomplete="off">
+          <input id="newStudent" placeholder="Alumno" autocomplete="off">
+          <select id="newRelationship"><option value="">Parentesco</option><option>Madre</option><option>Padre</option><option>Tutor legal</option><option>Abuela</option><option>Abuelo</option><option>Otro autorizado</option></select>
+          <input id="newCode" placeholder="Código" autocomplete="off">
+          <button id="addRecordBtn" class="secondary-btn" type="button">Agregar</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <main id="app" class="screen app-screen hidden">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">CONTROL ESCOLAR</p>
+        <h2>Generador de pase de salida</h2>
+      </div>
+      <div class="topbar-actions">
+        <button id="recordsBtn" class="ghost-btn" type="button">Ir a Registros</button>
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Activar modo oscuro" aria-pressed="false" title="Cambiar tema">
+          <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2"></circle>
+            <path d="M12 1.7v2.2M12 20.1v2.2M1.7 12h2.2M20.1 12h2.2M4.7 4.7l1.55 1.55M17.75 17.75l1.55 1.55M19.3 4.7l-1.55 1.55M6.25 17.75L4.7 19.3"></path>
+          </svg>
+        </button>
+        <button id="resetBtn" class="reset-btn" type="button" aria-label="Reiniciar datos" title="Reiniciar datos">
+          <svg class="reset-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 11a8 8 0 0 0-14.9-3.9L3 9.5"></path>
+            <path d="M3 4.8v4.7h4.7"></path>
+            <path d="M4 13a8 8 0 0 0 14.9 3.9L21 14.5"></path>
+            <path d="M21 19.2v-4.7h-4.7"></path>
+          </svg>
+        </button>
+        <button id="backHomeBtn" class="ghost-btn">Inicio</button>
+      </div>
+    </header>
+
+    <nav class="steps" aria-label="Secciones">
+      <button class="step active" data-step="1"><b>01</b><span>Verificar tutor</span></button>
+      <button class="step" data-step="2"><b>02</b><span>Datos del pase</span></button>
+      <button class="step" data-step="3"><b>03</b><span>Vista previa</span></button>
+    </nav>
+
+    <section id="step1" class="panel step-panel active-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">SECCIÓN 01</p>
+          <h3>Verificar que el tutor esté autorizado</h3>
+        </div>
+        <span id="authBadge" class="badge neutral">Sin verificar</span>
+      </div>
+
+      <div class="notice">
+        <strong>Antes de generar el pase:</strong> compara los datos del tutor con el registro autorizado. Esta comprobación es local y no sustituye la validación oficial de la escuela.
+      </div>
+
+      <div class="form-grid">
+        <label>Tutor que recoge al alumno
+          <input id="tutorName" type="text" placeholder="Nombre completo" autocomplete="off">
+        </label>
+        <label>Alumno
+          <input id="studentName" type="text" placeholder="Nombre completo del alumno" autocomplete="off">
+        </label>
+        <label>Parentesco
+          <select id="relationship">
+            <option value="">Seleccionar...</option>
+            <option>Madre</option><option>Padre</option><option>Tutor legal</option>
+            <option>Abuela</option><option>Abuelo</option><option>Otro autorizado</option>
+          </select>
+        </label>
+        <label>Código de autorización
+          <input id="authCode" type="text" placeholder="Ej. T-001" autocomplete="off">
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="verifyBtn" class="primary-btn">Verificar autorización</button>
+      </div>
+
+      <div id="authResult" class="result-card neutral-result">
+        <span class="result-icon">?</span>
+        <div><strong>Aún no se ha realizado una verificación.</strong><p>Introduce los datos y pulsa “Verificar autorización”.</p></div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="secondary-btn next-btn" data-next="2" disabled id="toFormBtn">Continuar a datos</button>
+      </div>
+    </section>
+
+    <section id="step2" class="panel step-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">SECCIÓN 02</p>
+          <h3>Capturar datos del pase</h3>
+        </div>
+        <span class="badge ok">Tutor autorizado</span>
+      </div>
+
+      <form id="passForm">
+        <div class="form-grid">
+          <label>Fecha
+            <input id="date" type="date" required>
+          </label>
+          <label>Grupo
+            <input id="group" type="text" placeholder="Ej. 4A" maxlength="20" required>
+          </label>
+          <label class="wide">Nombre del alumno
+            <input id="passName" type="text" placeholder="Nombre completo" required>
+          </label>
+          <label class="wide">Motivo
+            <select id="reason" required>
+              <option value="">Seleccionar motivo...</option>
+              <option>Actividades culturales</option>
+              <option>Enfermedad</option>
+              <option>Emergencia familiar o de fuerza mayor</option>
+              <option>Accidente o lesion</option>
+              <option>Otro</option>
+            </select>
+          </label>
+          <label id="otherReasonWrap" class="wide other-reason hidden">Motivo personalizado
+            <input id="otherReason" type="text" placeholder="Escribe el motivo" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="sentences">
+          </label>
+          <label>Hora
+            <input id="time" type="time" required>
+          </label>
+
+        </div>
+
+        <div class="form-tip">
+          <span>✓</span> Al enviar, los datos se colocarán automáticamente en la plantilla del pase de salida.
+        </div>
+
+        <div class="panel-footer">
+          <button type="button" class="secondary-btn prev-btn" data-prev="1">← Volver</button>
+          <button type="submit" class="primary-btn">Generar vista previa →</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="step3" class="panel step-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">SECCIÓN 03</p>
+          <h3>Vista previa del documento</h3>
+        </div>
+        <span class="badge ok">Listo para generar</span>
+      </div>
+
+      <div class="preview-wrap">
+        <canvas id="passCanvas" width="1600" height="950" aria-label="Vista previa del pase de salida"></canvas>
+      </div>
+
+      <div class="preview-info">
+        <div>
+          <strong>Imagen final</strong>
+          <p>Abre la imagen en una pestaña nueva y usa “Guardar imagen como…” con clic derecho, o descarga el PNG directamente.</p>
+        </div>
+        <div class="preview-actions">
+          <button id="openImageBtn" class="secondary-btn">Abrir imagen</button>
+          <button id="downloadBtn" class="primary-btn">Guardar PNG</button>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="secondary-btn prev-btn" data-prev="2">← Editar datos</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
